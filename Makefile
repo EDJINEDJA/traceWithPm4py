@@ -7,6 +7,15 @@ initialize_git:
 	git remote add origin https://github.com/EDJINEDJA/traceWithPm4py.git
 	git push origin main
 
+install:
+	@echo "setup virtual environnement"
+	pipenv install
+	pipenv run pre-commit install
+
+env:
+	@echo "activate virtual environnement"
+	pipenv shell
+
 pip_git:
 	@echo "pushing ..."
 	git add .
@@ -15,4 +24,4 @@ pip_git:
 	sleep 2
 	git push origin main
 
-setup: initialize_git
+setup: initialize_git install
