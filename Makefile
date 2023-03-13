@@ -11,7 +11,7 @@ pip_git:
 	@echo "pushing ..."
 	git add .
 	sleep 2
-	git commit "commit"
+	git commit -m "commit"
 	sleep 2
 	git push origin main
 
