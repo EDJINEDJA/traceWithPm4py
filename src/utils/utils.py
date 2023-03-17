@@ -176,7 +176,7 @@ class Preprocessor:
         pd.DataFrame({"case:concept:name": Case, "Trace": traces}).to_csv(
             os.path.join(
                 os.path.join(self.outputPath, self.section),
-                self.outputFileName + "Trace.csv",
+                self.outputFileName + "Trace" + ".csv",
             )
         )
 
