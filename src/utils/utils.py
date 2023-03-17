@@ -142,8 +142,8 @@ class Preprocessor:
 
     def traceScraper(self):
 
-        # self.Preprocess()
-        self.section = "essai"
+        self.Preprocess()
+        # self.section = "essai"
 
         logSamples = pd.read_csv(
             os.path.realpath(
@@ -167,16 +167,16 @@ class Preprocessor:
             trace = ""
             for conceptName in range(len(log[caseConceptName])):
                 trace = trace + log[caseConceptName][conceptName]["concept:name"] + " "
-            # trace = trace.split(" ")
-            # unique_chars = set(trace)
-            # unique_string = " ".join(unique_chars)
-            traces.append(trace.strip())
+            trace = trace.split(" ")
+            unique_chars = set(trace)
+            unique_string = " ".join(unique_chars)
+            traces.append(unique_string.strip())
             Case.append(caseConceptName)
 
         pd.DataFrame({"case:concept:name": Case, "Trace": traces}).to_csv(
             os.path.join(
                 os.path.join(self.outputPath, self.section),
-                "Trace.csv",
+                "Trace_unique.csv",
             )
         )
 
