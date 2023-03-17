@@ -159,10 +159,11 @@ class Preprocessor:
             timestamp_key="time:timestamp",
         )
         traces = []
+        Case = []
         # Extract traces from event log
         log = pm.convert_to_event_log(logSamplesPm)
         for caseConceptName in range(len(log)):
-            Case = []
+
             trace = ""
             for conceptName in range(len(log[caseConceptName])):
                 trace = trace + log[caseConceptName][conceptName]["concept:name"] + " "
@@ -171,17 +172,12 @@ class Preprocessor:
             unique_string = " ".join(unique_chars)
             traces.append(unique_string.strip())
             Case.append(caseConceptName)
-            len(Case)
-            len(traces)
 
-        # data = pd.DataFrame({"case:concept:name": Case, "Trace": traces}).to_csv(
-        # os.path.join(
-        # os.path.join(self.outputPath, self.section),
-        # self.outputFileName + "Trace",
-        # )
-        # )
-
-        # Trace export under form of txt file
-        # with open
+        pd.DataFrame({"case:concept:name": Case, "Trace": traces}).to_csv(
+            os.path.join(
+                os.path.join(self.outputPath, self.section),
+                self.outputFileName + "Trace",
+            )
+        )
 
         return logSamplesPm
