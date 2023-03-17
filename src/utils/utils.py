@@ -167,10 +167,10 @@ class Preprocessor:
             trace = ""
             for conceptName in range(len(log[caseConceptName])):
                 trace = trace + log[caseConceptName][conceptName]["concept:name"] + " "
-            trace = trace.split(" ")
-            unique_chars = set(trace)
-            unique_string = " ".join(unique_chars)
-            traces.append(unique_string.strip())
+            # trace = trace.split(" ")
+            # unique_chars = set(trace)
+            # unique_string = " ".join(unique_chars)
+            traces.append(trace.strip())
             Case.append(caseConceptName)
 
         pd.DataFrame({"case:concept:name": Case, "Trace": traces}).to_csv(
