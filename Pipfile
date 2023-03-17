@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 pm4py = "*"
+torch = "*"
 
 [dev-packages]
 

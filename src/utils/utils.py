@@ -1,5 +1,5 @@
 """
-utils has as goal to put in place a set of utils functions useful to transform relational database into graph
+utils has as goal to put in place a set of utils functions useful to transform to extract trace in to data provides by third paerson
 In utils, we can found function such as Load that allow us to load the log file
 """
 
@@ -9,7 +9,8 @@ import time
 import typing
 
 import pandas as pd
-from neo4j import GraphDatabase
+import pm4py as pm
+from pm4py.objects.log.importer.xes import importer as xes_importer
 
 
 class Preprocessor:
@@ -21,6 +22,7 @@ class Preprocessor:
         outputFileName: str,
         timestamp_format: str = "%Y.%m.%d %H:%M:%S",
     ) -> None:
+        self.section = ""
         self.inputPath = inputPath
         self.outputPath = outputPath
         self.fileName = fileName
@@ -28,6 +30,11 @@ class Preprocessor:
         self.timestamp_format = timestamp_format
 
     def Preprocess(self) -> None:
+        if self.section == "":
+            self.section = input(
+                "write your avatar name for enable section:  \n Avatar : "
+            )
+            print(60 * "-")
 
         csvLog = pd.read_csv(
             filepath_or_buffer=os.path.realpath(self.inputPath + self.fileName),
@@ -48,7 +55,9 @@ class Preprocessor:
 
         # Replace "" by the right column name
         for item in header:
-            firstWord = " Choose the appropriate column name using the  Multidimentional process mining methode"
+            firstWord = (
+                " Choose the appropriate column name useful for trace extracting"
+            )
             print(f" Column : {item}")
             response = input(
                 f"{firstWord} \n Choose the appropriate number \n 1 - Case \n 2 - Activity \n 3 - Timestamp , \n 4 - Actor \n 0 - default \n"
@@ -86,44 +95,93 @@ class Preprocessor:
                 # create dataframe for default timestamp formatting (YYYY-MM-DD HH:MM:SS.ms)
             header = list(csvLog)  # save the updated header data
 
-            logSamples = pd.DataFrame(
+            log = pd.DataFrame(
                 sampleList, columns=header
             )  # create pandas dataframe and add the samples
-            logSamples["Timestamp"] = pd.to_datetime(
-                logSamples["Timestamp"], format=self.timestamp_format
+            log["Timestamp"] = pd.to_datetime(
+                log["Timestamp"], format=self.timestamp_format
             )
 
-            logSamples.fillna(0)
+            log.fillna(0)
             # sort all events by time, add a second column if data contains events with identical timestamps to ensure canonical ordering
-            logSamples["Timestamp"] = logSamples["Timestamp"].map(
+            log["Timestamp"] = log["Timestamp"].map(
                 lambda x: x.strftime("%Y-%m-%dT%H:%M:%S.%f")[0:-3] + "+0100"
             )
-            logSamples.sort_values(["Timestamp"], inplace=True)
+            log.sort_values(["Timestamp"], inplace=True)
+
+            # Sample of log for PM
+            logSamples = log[["Case", "Activity", "Timestamp"]].copy()
+            logSamples["Case"] = logSamples["Case"].apply(lambda _: str(_))
+            logSamples["Activity"] = logSamples["Activity"].apply(lambda _: str(_))
+            logSamples["Timestamp"] = pd.to_datetime(
+                logSamples["Timestamp"], format="%Y-%m-%dT%H:%M:%S.%f"
+            )
+            logSamples.rename(
+                columns={
+                    "Case": "case:concept:name",
+                    "Activity": "concept:name",
+                    "Timestamp": "time:timestamp",
+                },
+                inplace=True,
+            )
 
             # and write dataframe to CSV file sorted by time
-            if not os.path.isdir(self.outputPath):
-                os.mkdir(self.outputPath)
-            logSamples.to_csv(self.outputPath + self.outputFileName, index=False)
+            if not os.path.isdir(os.path.join(self.outputPath, self.section)):
+                os.mkdir(os.path.join(self.outputPath, self.section))
+
+            logSamples.to_csv(
+                os.path.join(
+                    os.path.join(self.outputPath, self.section), self.outputFileName
+                ),
+                index=False,
+            )
         else:
-            print("Choose right dataframe, This type of table don't follow MPMM rule")
+            print(
+                "Choose right dataframe, This type of table don't follow PM rule for trace extrating"
+            )
 
-    def Load(self, filePath: str):
+    def traceScraper(self):
 
-        eventTitle = []
-        event = []
-        numberEvent = 0
+        # self.Preprocess()
+        self.section = "essai"
 
-        with open(filePath, mode="r") as f:
-            row = csv.reader(f)
+        logSamples = pd.read_csv(
+            os.path.realpath(
+                os.path.join(
+                    os.path.join(self.outputPath, self.section), self.outputFileName
+                )
+            )
+        )
+        logSamplesPm = pm.format_dataframe(
+            logSamples,
+            case_id="case:concept:name",
+            activity_key="concept:name",
+            timestamp_key="time:timestamp",
+        )
+        traces = []
+        # Extract traces from event log
+        log = pm.convert_to_event_log(logSamplesPm)
+        for caseConceptName in range(len(log)):
+            Case = []
+            trace = ""
+            for conceptName in range(len(log[caseConceptName])):
+                trace = trace + log[caseConceptName][conceptName]["concept:name"] + " "
+            trace = trace.split(" ")
+            unique_chars = set(trace)
+            unique_string = " ".join(unique_chars)
+            traces.append(unique_string.strip())
+            Case.append(caseConceptName)
+            len(Case)
+            len(traces)
 
-            if numberEvent == 0:
+        # data = pd.DataFrame({"case:concept:name": Case, "Trace": traces}).to_csv(
+        # os.path.join(
+        # os.path.join(self.outputPath, self.section),
+        # self.outputFileName + "Trace",
+        # )
+        # )
 
-                eventTitle.extend(list(row))
-                numberEvent += 1
-            else:
+        # Trace export under form of txt file
+        # with open
 
-                event.append(row)
-
-        log = pd.DataFrame(event, columns=eventTitle)
-
-        return eventTitle, log
+        return logSamplesPm
